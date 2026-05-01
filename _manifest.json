@@ -1,49 +1,36 @@
 {
-  "manifest_version": 1,
+  "manifest_version": 2,
+  "version": "1.1.0",
   "name": "萌娘百科插件",
-  "version": "1.0.0",
-  "description": "为麦麦提供萌娘百科知识补充",
+  "description": "为麦麦提供萌娘百科知识补充：词条摘要、主词条信息及相关语境，支持 generator=search 与 opensearch 双路径回退。",
   "author": {
     "name": "晴空",
     "url": "https://github.com/XXXxx7258"
   },
   "license": "MIT",
-  "host_application": {
-    "min_version": "0.12.0"
+  "urls": {
+    "repository": "https://github.com/XXXxx7258/moegirl_wiki_plugin",
+    "homepage": "https://github.com/XXXxx7258/moegirl_wiki_plugin",
+    "documentation": "https://github.com/XXXxx7258/moegirl_wiki_plugin#readme",
+    "issues": "https://github.com/XXXxx7258/moegirl_wiki_plugin/issues"
   },
-  "homepage_url": "https://github.com/XXXxx7258/moegirl_wiki_plugin",
-  "repository_url": "https://github.com/XXXxx7258/moegirl_wiki_plugin",
-  "keywords": [
-    "moegirl",
-    "萌娘百科",
-    "MaiBot",
-    "tool",
-    "知识补充",
-    "百科",
-    "搜索"
+  "host_application": {
+    "min_version": "0.12.0",
+    "max_version": "1.14.5"
+  },
+  "sdk": {
+    "min_version": "2.0.0",
+    "max_version": "2.99.99"
+  },
+  "dependencies": [],
+  "capabilities": [
+    "llm.tool"
   ],
-  "categories": [
-    "Search",
-    "Utilities",
-    "Knowledge"
-  ],
-  "default_locale": "zh-CN",
-  "plugin_info": {
-    "is_built_in": false,
-    "plugin_type": "tool",
-    "components": [
-      {
-        "type": "tool",
-        "name": "moegirl_lookup",
-        "description": "查询萌娘百科词条、主词条信息和相关语境"
-      }
-    ],
-    "features": [
-      "萌娘百科词条知识补充",
-      "问句归一化",
-      "主词条详细结果与相关语境补充",
-      "generator=search 与 opensearch 双路径回退"
+  "i18n": {
+    "default_locale": "zh-CN",
+    "supported_locales": [
+      "zh-CN"
     ]
   },
-  "id": "XXXxx7258.moegirl_wiki_plugin"
+  "id": "xxxxx7258.moegirl-wiki-plugin"
 }
