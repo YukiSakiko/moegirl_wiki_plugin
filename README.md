@@ -2,6 +2,8 @@
 
 为 MaiBot / 麦麦提供一个 `moegirl_lookup` Tool，用于在聊天过程中查询萌娘百科词条、补充主词条信息，并附带相关语境条目。
 
+## 也推荐安装mcp[仓库:](https://github.com/XXXxx7258/mcp-server-moegirl-wiki) https://github.com/XXXxx7258/mcp-server-moegirl-wiki
+
 ## 功能特性
 
 - 基于萌娘百科 Action API 查询词条
