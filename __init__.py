@@ -1,3 +1,3 @@
-from .plugin import MoegirlLookupTool, MoegirlWikiPlugin
+from .plugin import MoegirlWikiPlugin, create_plugin
 
-__all__ = ["MoegirlLookupTool", "MoegirlWikiPlugin"]
+__all__ = ["MoegirlWikiPlugin", "create_plugin"]
