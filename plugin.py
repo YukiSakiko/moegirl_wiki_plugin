@@ -14,11 +14,17 @@ from .client import MoegirlApiClient
 from .config import MoegirlWikiPluginConfig
 from .services.query_service import MoegirlQueryService
 
+PLUGIN_VERSION = "2.1.0"
+
 
 class MoegirlWikiPlugin(MaiBotPlugin):
     """萌娘百科查询插件主类。"""
 
     config_model = MoegirlWikiPluginConfig
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._service: MoegirlQueryService | None = None
 
     # ===== 生命周期 =====
 
@@ -27,7 +33,7 @@ class MoegirlWikiPlugin(MaiBotPlugin):
         self.ctx.logger.info(
             "moegirl_wiki_plugin v%s 已加载 (timeout=%ds, cache_ttl=%ds, "
             "prefer_generator=%s, prefer_exact_title=%s, max_candidates=%d)",
-            cfg.plugin.version,
+            PLUGIN_VERSION,
             cfg.network.timeout_seconds,
             cfg.cache.ttl_seconds,
             cfg.search.prefer_generator_search,
@@ -36,11 +42,14 @@ class MoegirlWikiPlugin(MaiBotPlugin):
         )
 
     async def on_unload(self) -> None:
+        self._service = None
         self.ctx.logger.info("moegirl_wiki_plugin 已卸载")
 
     async def on_config_update(self, scope: str, config_data: dict[str, Any], version: str) -> None:
         del config_data
-        self.ctx.logger.info("配置更新事件: scope=%s version=%s", scope, version)
+        # 丢弃旧服务实例，下次 Tool 调用按新配置重建（缓存与客户端参数随之刷新）
+        self._service = None
+        self.ctx.logger.info("配置更新事件: scope=%s version=%s，查询服务将在下次调用时重建", scope, version)
 
     # ===== 内部辅助 =====
 
@@ -56,6 +65,11 @@ class MoegirlWikiPlugin(MaiBotPlugin):
             cache_ttl_seconds=cfg.cache.ttl_seconds,
             enable_generator_search=cfg.search.prefer_generator_search,
         )
+
+    def _get_service(self) -> MoegirlQueryService:
+        if self._service is None:
+            self._service = self._build_service()
+        return self._service
 
     @staticmethod
     def _format_result(result: Any) -> str:
@@ -127,11 +141,11 @@ class MoegirlWikiPlugin(MaiBotPlugin):
         mode: str = "summary",
         max_candidates: int | None = None,
         **kwargs: Any,
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         del kwargs
         normalized_query = str(query or "").strip()
         if not normalized_query:
-            return {"name": "moegirl_lookup", "content": "查询词不能为空。"}
+            return {"success": False, "content": "查询词不能为空。", "error": "empty_query"}
 
         normalized_mode = str(mode or "summary").strip() or "summary"
         if normalized_mode not in ("summary", "candidates"):
@@ -145,7 +159,7 @@ class MoegirlWikiPlugin(MaiBotPlugin):
         if resolved_max_candidates <= 0:
             resolved_max_candidates = default_max_candidates
 
-        service = self._build_service()
+        service = self._get_service()
         try:
             result = await service.lookup(
                 normalized_query,
@@ -154,9 +168,14 @@ class MoegirlWikiPlugin(MaiBotPlugin):
             )
         except Exception as exc:  # noqa: BLE001
             self.ctx.logger.error("moegirl_lookup 执行异常: %s", exc, exc_info=True)
-            return {"name": "moegirl_lookup", "content": f"萌娘百科查询失败: {exc}"}
+            return {
+                "success": False,
+                "content": f"萌娘百科查询失败: {exc}",
+                "error": str(exc),
+            }
 
-        return {"name": "moegirl_lookup", "content": self._format_result(result)}
+        # not_found / ambiguous 属于正常的业务结果，对 LLM 而言调用本身是成功的
+        return {"success": True, "content": self._format_result(result)}
 
 
 def create_plugin() -> MoegirlWikiPlugin:

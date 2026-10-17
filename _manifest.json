@@ -1,18 +1,18 @@
 {
   "manifest_version": 2,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "name": "萌娘百科插件",
   "description": "为麦麦提供萌娘百科知识补充：词条摘要、主词条信息及相关语境，支持 generator=search 与 opensearch 双路径回退。",
   "author": {
-    "name": "晴空",
-    "url": "https://github.com/XXXxx7258"
+    "name": "ValleyWinds",
+    "url": "https://github.com/ValleyWinds"
   },
   "license": "MIT",
   "urls": {
-    "repository": "https://github.com/XXXxx7258/moegirl_wiki_plugin",
-    "homepage": "https://github.com/XXXxx7258/moegirl_wiki_plugin",
-    "documentation": "https://github.com/XXXxx7258/moegirl_wiki_plugin#readme",
-    "issues": "https://github.com/XXXxx7258/moegirl_wiki_plugin/issues"
+    "repository": "https://github.com/ValleyWinds/Moegirl-Wiki",
+    "homepage": "https://github.com/ValleyWinds/Moegirl-Wiki",
+    "documentation": "https://github.com/ValleyWinds/Moegirl-Wiki#readme",
+    "issues": "https://github.com/ValleyWinds/Moegirl-Wiki/issues"
   },
   "host_application": {
     "min_version": "1.0.0",
@@ -29,14 +29,12 @@
       "version_spec": ">=3.8.0"
     }
   ],
-  "capabilities": [
-    "llm.tool"
-  ],
+  "capabilities": [],
   "i18n": {
     "default_locale": "zh-CN",
     "supported_locales": [
       "zh-CN"
     ]
   },
-  "id": "xxxxx7258.moegirl-wiki-plugin"
+  "id": "valleywinds.moegirl-wiki"
 }

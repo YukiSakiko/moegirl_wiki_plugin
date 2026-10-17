@@ -2,8 +2,6 @@
 
 为 MaiBot / 麦麦提供一个 `moegirl_lookup` Tool，用于在聊天过程中查询萌娘百科词条、补充主词条信息，并附带相关语境条目。
 
-## 也推荐安装mcp[仓库:](https://github.com/XXXxx7258/mcp-server-moegirl-wiki) https://github.com/XXXxx7258/mcp-server-moegirl-wiki
-
 ## 功能特性
 
 - 基于萌娘百科 Action API 查询词条
@@ -28,10 +26,12 @@ moegirl_wiki_plugin/
 ├─ __init__.py
 ├─ _manifest.json
 ├─ client.py
+├─ config.py
 ├─ models.py
 ├─ plugin.py
 ├─ services/
 │  └─ query_service.py
+├─ requirements.txt
 ├─ README.md
 ├─ LICENSE
 └─ .gitignore
@@ -45,37 +45,29 @@ moegirl_wiki_plugin/
 
 ```bash
 cd /path/to/MaiBot/plugins
-git clone https://github.com/XXXxx7258/moegirl_wiki_plugin.git
+git clone https://github.com/ValleyWinds/Moegirl-Wiki.git moegirl_wiki_plugin
 ```
 
 建议最终目录名保持为 `moegirl_wiki_plugin`。
 
-插件所需依赖：
-
-```bash
-pip install brotli
-```
+插件依赖只有 `aiohttp`，已通过 `_manifest.json` 的 `python_package` 依赖声明，安装/更新插件时由依赖管道自动安装，无需手动 `pip install`。
 
 ---
 
 ## 配置说明
 
-> 插件配置会在 MaiBot 重启时候根据 `config_schema` 自动生成。
-
-首次加载插件后，会在插件目录下自动生成 `config.toml`，然后你再按需编辑。
+> 插件加载或热重载时会根据配置模型自动生成 `config.toml`。修改配置后在 WebUI「插件管理」点重新加载即可生效，**无需重启 MaiBot**。
 
 ### 最小配置
 
 ```toml
 [plugin]
-enabled = true
-config_version = "1.0.0"
+config_version = "2.1.0"
 
 [network]
 timeout_seconds = 10
 
 [auth]
-mode = "anonymous"
 cookie_string = ""
 
 [search]
@@ -91,13 +83,14 @@ max_candidates = 5
 prefer_exact_title = true
 ```
 
+多数场景直接留空使用默认值即可，大部分配置也可以在 WebUI 插件设置页里修改。
+
 ### Cookie 配置（可选）
 
 当前搜索主路径**不依赖 Cookie**，但你仍然可以保留登录态配置，方便后续扩展或站点策略变化时使用：
 
 ```toml
 [auth]
-mode = "cookie"
 cookie_string = "完整 Cookie 头"
 ```
 
