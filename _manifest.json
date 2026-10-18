@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
-  "version": "2.1.0",
+  "version": "2.1.1",
   "name": "萌娘百科插件",
   "description": "为麦麦提供萌娘百科知识补充：词条摘要、主词条信息及相关语境，支持 generator=search 与 opensearch 双路径回退。",
   "author": {
     "name": "ValleyWinds",
     "url": "https://github.com/ValleyWinds"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "urls": {
     "repository": "https://github.com/ValleyWinds/Moegirl-Wiki",
     "homepage": "https://github.com/ValleyWinds/Moegirl-Wiki",
