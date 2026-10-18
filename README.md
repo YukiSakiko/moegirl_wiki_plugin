@@ -8,13 +8,13 @@
 
 你在群里或私聊里问：
 
-> 帮我查查萌娘百科的词条「镜音铃」，她是谁呀？
+> 帮我查查萌娘百科的词条「初音未来」，她是谁呀？
 
-麦麦可能会回你：
+麦麦可能会回你（以下依据萌百词条真实摘要）：
 
-> 镜音铃，VOCALOID的虚拟歌手，Crypton出的
-> 跟镜音连一起那批，声优是下田麻美
-> 萌百主条目叫「镜音铃·连」，搜这个就有
+> 初音未来，Crypton做的声音库软件和拟人化形象，能拿去喂VOCALOID唱歌的那种
+> 中文一般直接叫初音，日英简称Miku，是角色主唱系列第一作，编号CV01
+> 跟镜音铃·连、巡音流歌、MEIKO、KAITO一起叫Piapro角色，词条链接发你了
 
 不需要任何命令，正常说话即可。提到"萌娘百科""萌百"更容易触发查询，但平时聊到 ACGN 相关话题她也能自己判断要不要查。
 
@@ -66,6 +66,6 @@ git clone https://github.com/ValleyWinds/Moegirl-Wiki.git valleywinds.moegirl-wi
 
 ## 致谢与许可
 
-本插件基于 [XXXxx7258/moegirl_wiki_plugin](https://github.com/XXXxx7258/moegirl_wiki_plugin)（原 MIT 许可）改造而来，现由 ValleyWinds 维护。
+本项目基于 [moegirl_wiki_plugin](https://github.com/XXXxx7258/moegirl_wiki_plugin) 修改而来，感谢原作者 XXXxx7258（晴空）的原始工作。
 
-本插件以 **GPL-3.0-or-later** 协议发布，详见 [LICENSE](./LICENSE)。
+本项目以 **GPL-3.0-or-later** 协议开源，详见 [LICENSE](./LICENSE)。
