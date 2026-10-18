@@ -66,6 +66,6 @@ git clone https://github.com/ValleyWinds/Moegirl-Wiki.git valleywinds.moegirl-wi
 
 ## 致谢与许可
 
-本项目基于 [moegirl_wiki_plugin](https://github.com/XXXxx7258/moegirl_wiki_plugin) 修改而来，感谢原作者 XXXxx7258（晴空）的原始工作。
+本项目基于 [moegirl_wiki_plugin](https://github.com/XXXxx7258/moegirl_wiki_plugin) 修改而来，感谢原作者 [XXXxx7258（晴空）](https://github.com/XXXxx7258) 的原始工作。
 
 本项目以 **GPL-3.0-or-later** 协议开源，详见 [LICENSE](./LICENSE)。
