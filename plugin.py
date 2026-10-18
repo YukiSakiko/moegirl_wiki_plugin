@@ -16,6 +16,9 @@ from .services.query_service import MoegirlQueryService
 
 PLUGIN_VERSION = "2.1.0"
 
+# 与 config.ResultSection.max_candidates 的 le=20 保持一致
+MAX_CANDIDATES_CEILING = 20
+
 
 class MoegirlWikiPlugin(MaiBotPlugin):
     """萌娘百科查询插件主类。"""
@@ -158,6 +161,8 @@ class MoegirlWikiPlugin(MaiBotPlugin):
             resolved_max_candidates = default_max_candidates
         if resolved_max_candidates <= 0:
             resolved_max_candidates = default_max_candidates
+        # 钳制到配置模型的合法区间，防止模型传入超大值撑爆 API 与返回正文
+        resolved_max_candidates = max(1, min(resolved_max_candidates, MAX_CANDIDATES_CEILING))
 
         service = self._get_service()
         try:

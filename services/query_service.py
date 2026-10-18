@@ -100,9 +100,16 @@ class MoegirlQueryService:
             return None
         return result
 
+    _CACHE_MAX_ENTRIES = 256
+
     def _write_cache(self, query: str, mode: str, max_candidates: int, result: MoegirlLookupResult) -> None:
         if self.cache_ttl_seconds <= 0:
             return
+        if len(self._cache) >= self._CACHE_MAX_ENTRIES:
+            # 简单防膨胀：达到上限时按写入时间清掉最早的一半
+            oldest = sorted(self._cache.items(), key=lambda kv: kv[1][0])[: self._CACHE_MAX_ENTRIES // 2]
+            for key, _ in oldest:
+                self._cache.pop(key, None)
         self._cache[(query, mode, max_candidates)] = (time.time(), result)
 
     def _find_trusted_main_candidate(
