@@ -14,7 +14,7 @@ from .client import MoegirlApiClient
 from .config import MoegirlWikiPluginConfig
 from .services.query_service import MoegirlQueryService
 
-PLUGIN_VERSION = "2.1.1"
+PLUGIN_VERSION = "2.1.2"
 
 # 与 config.ResultSection.max_candidates 的 le=20 保持一致
 MAX_CANDIDATES_CEILING = 20

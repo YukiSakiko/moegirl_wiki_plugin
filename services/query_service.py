@@ -128,6 +128,10 @@ class MoegirlQueryService:
 
         return None
 
+    # 候选摘要缺失时逐条补查详情，单轮补查数量独立设限，
+    # 防止大候选上限下的一次工具调用对站点打出过多请求
+    _DESCRIPTION_FETCH_LIMIT = 4
+
     async def _build_context_candidates(
         self,
         candidates: list[MoegirlCandidate],
@@ -136,13 +140,15 @@ class MoegirlQueryService:
         limit: int = 4,
     ) -> list[MoegirlCandidate]:
         contexts: list[MoegirlCandidate] = []
+        description_fetches = 0
         for candidate in candidates:
             if exclude_title and candidate.title == exclude_title:
                 continue
 
             description = _truncate_text(candidate.description)
             url = candidate.url
-            if not description:
+            if not description and description_fetches < self._DESCRIPTION_FETCH_LIMIT:
+                description_fetches += 1
                 try:
                     page = await self.client.fetch_page_summary(candidate.title)
                 except (MoegirlApiError, TimeoutError):
