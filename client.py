@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import html
 import re
 from typing import Any
@@ -147,18 +148,28 @@ class MoegirlApiClient:
         return headers
 
     async def _request_json(self, params: dict[str, Any]) -> Any:
+        # 网络层异常统一转成 MoegirlApiError，让上层按「API 失败」一致处理：
+        # aiohttp.ClientError 覆盖连接失败/DNS/非 JSON 响应等，
+        # asyncio.TimeoutError 在 Python 3.8~3.10 上不是 builtins.TimeoutError，
+        # 若不在此收口，上层的 except TimeoutError 在低版本宿主上接不住超时。
         timeout = aiohttp.ClientTimeout(total=self.timeout_seconds)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(self.base_url, params=params, headers=self._build_headers()) as response:
-                if response.status != 200:
-                    raise MoegirlApiError(f"HTTP {response.status}")
-                payload = await response.json()
-                if isinstance(payload, dict) and isinstance(payload.get("error"), dict):
-                    error = payload["error"]
-                    code = str(error.get("code", "unknown"))
-                    info = str(error.get("info", "未知错误"))
-                    raise MoegirlApiError(f"{code}: {info}")
-                return payload
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(self.base_url, params=params, headers=self._build_headers()) as response:
+                    if response.status != 200:
+                        raise MoegirlApiError(f"HTTP {response.status}")
+                    payload = await response.json()
+        except asyncio.TimeoutError as exc:
+            raise MoegirlApiError(f"请求超时（>{self.timeout_seconds}s）") from exc
+        except aiohttp.ClientError as exc:
+            raise MoegirlApiError(f"网络请求失败: {exc}") from exc
+
+        if isinstance(payload, dict) and isinstance(payload.get("error"), dict):
+            error = payload["error"]
+            code = str(error.get("code", "unknown"))
+            info = str(error.get("info", "未知错误"))
+            raise MoegirlApiError(f"{code}: {info}")
+        return payload
 
     async def opensearch(self, query: str, limit: int = 5) -> list[MoegirlCandidate]:
         payload = await self._request_json({

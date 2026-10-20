@@ -85,7 +85,8 @@ class MoegirlQueryService:
         self.prefer_exact_title = prefer_exact_title
         self.cache_ttl_seconds = cache_ttl_seconds
         self.enable_generator_search = enable_generator_search
-        self._cache: dict[tuple[str, str, int], tuple[float, MoegirlLookupResult]] = {}
+        # 缓存值：(写入时间, 产生该结果的查询发起时间, 结果)
+        self._cache: dict[tuple[str, str, int], tuple[float, float, MoegirlLookupResult]] = {}
 
     def _read_cache(self, query: str, mode: str, max_candidates: int) -> MoegirlLookupResult | None:
         if self.cache_ttl_seconds <= 0:
@@ -94,7 +95,7 @@ class MoegirlQueryService:
         cached = self._cache.get(key)
         if not cached:
             return None
-        timestamp, result = cached
+        timestamp, _, result = cached
         if time.time() - timestamp > self.cache_ttl_seconds:
             self._cache.pop(key, None)
             return None
@@ -102,7 +103,14 @@ class MoegirlQueryService:
 
     _CACHE_MAX_ENTRIES = 256
 
-    def _write_cache(self, query: str, mode: str, max_candidates: int, result: MoegirlLookupResult) -> None:
+    def _write_cache(
+        self,
+        query: str,
+        mode: str,
+        max_candidates: int,
+        result: MoegirlLookupResult,
+        started_at: float,
+    ) -> None:
         if self.cache_ttl_seconds <= 0:
             return
         if len(self._cache) >= self._CACHE_MAX_ENTRIES:
@@ -110,7 +118,12 @@ class MoegirlQueryService:
             oldest = sorted(self._cache.items(), key=lambda kv: kv[1][0])[: self._CACHE_MAX_ENTRIES // 2]
             for key, _ in oldest:
                 self._cache.pop(key, None)
-        self._cache[(query, mode, max_candidates)] = (time.time(), result)
+        key = (query, mode, max_candidates)
+        existing = self._cache.get(key)
+        if existing is not None and existing[1] > started_at:
+            # 已有结果来自更晚发起的查询（并发时更晚发起=更新鲜），不用旧数据覆盖
+            return
+        self._cache[key] = (time.time(), started_at, result)
 
     def _find_trusted_main_candidate(
         self,
@@ -181,6 +194,7 @@ class MoegirlQueryService:
         return await self.client.opensearch(query, limit=max_candidates)
 
     async def lookup(self, query: str, mode: str = "summary", max_candidates: int = 5) -> MoegirlLookupResult:
+        started_at = time.time()
         raw_query = query.strip()
         normalized_query = normalize_lookup_query(raw_query)
         cached = self._read_cache(raw_query, mode, max_candidates)
@@ -190,7 +204,7 @@ class MoegirlQueryService:
         candidates = await self._lookup_candidates(normalized_query, max_candidates)
         if not candidates:
             result = MoegirlLookupResult(status="not_found", message="未找到明显匹配词条")
-            self._write_cache(raw_query, mode, max_candidates, result)
+            self._write_cache(raw_query, mode, max_candidates, result, started_at)
             return result
 
         if mode == "candidates":
@@ -200,7 +214,7 @@ class MoegirlQueryService:
                 candidates=contexts,
                 message="以下词条可能相关：",
             )
-            self._write_cache(raw_query, mode, max_candidates, result)
+            self._write_cache(raw_query, mode, max_candidates, result, started_at)
             return result
 
         trusted_candidate = self._find_trusted_main_candidate(candidates, normalized_query) if self.prefer_exact_title else None
@@ -216,7 +230,7 @@ class MoegirlQueryService:
                     candidates=contexts,
                     message="未找到足够可信的主词条，以下词条可能相关：",
                 )
-                self._write_cache(raw_query, mode, max_candidates, result)
+                self._write_cache(raw_query, mode, max_candidates, result, started_at)
                 return result
             related_candidates = await self._build_context_candidates(
                 candidates,
@@ -224,7 +238,7 @@ class MoegirlQueryService:
                 limit=max(0, min(max_candidates - 1, 4)),
             )
             result = MoegirlLookupResult(status="ok", page=page, candidates=related_candidates)
-            self._write_cache(raw_query, mode, max_candidates, result)
+            self._write_cache(raw_query, mode, max_candidates, result, started_at)
             return result
 
         contexts = await self._build_context_candidates(candidates, limit=max_candidates)
@@ -233,7 +247,7 @@ class MoegirlQueryService:
             candidates=contexts,
             message="未找到足够可信的主词条，以下词条可能相关：",
         )
-        self._write_cache(raw_query, mode, max_candidates, result)
+        self._write_cache(raw_query, mode, max_candidates, result, started_at)
         return result
 
     def lookup_sync(self, query: str, mode: str = "summary", max_candidates: int = 5) -> MoegirlLookupResult:
