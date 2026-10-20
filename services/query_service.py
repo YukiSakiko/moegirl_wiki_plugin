@@ -100,9 +100,16 @@ class MoegirlQueryService:
             return None
         return result
 
+    _CACHE_MAX_ENTRIES = 256
+
     def _write_cache(self, query: str, mode: str, max_candidates: int, result: MoegirlLookupResult) -> None:
         if self.cache_ttl_seconds <= 0:
             return
+        if len(self._cache) >= self._CACHE_MAX_ENTRIES:
+            # 简单防膨胀：达到上限时按写入时间清掉最早的一半
+            oldest = sorted(self._cache.items(), key=lambda kv: kv[1][0])[: self._CACHE_MAX_ENTRIES // 2]
+            for key, _ in oldest:
+                self._cache.pop(key, None)
         self._cache[(query, mode, max_candidates)] = (time.time(), result)
 
     def _find_trusted_main_candidate(
@@ -121,6 +128,10 @@ class MoegirlQueryService:
 
         return None
 
+    # 候选摘要缺失时逐条补查详情，单轮补查数量独立设限，
+    # 防止大候选上限下的一次工具调用对站点打出过多请求
+    _DESCRIPTION_FETCH_LIMIT = 4
+
     async def _build_context_candidates(
         self,
         candidates: list[MoegirlCandidate],
@@ -129,13 +140,15 @@ class MoegirlQueryService:
         limit: int = 4,
     ) -> list[MoegirlCandidate]:
         contexts: list[MoegirlCandidate] = []
+        description_fetches = 0
         for candidate in candidates:
             if exclude_title and candidate.title == exclude_title:
                 continue
 
             description = _truncate_text(candidate.description)
             url = candidate.url
-            if not description:
+            if not description and description_fetches < self._DESCRIPTION_FETCH_LIMIT:
+                description_fetches += 1
                 try:
                     page = await self.client.fetch_page_summary(candidate.title)
                 except (MoegirlApiError, TimeoutError):

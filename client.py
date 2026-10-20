@@ -99,6 +99,14 @@ def parse_page_summary_payload(payload: dict[str, Any]) -> MoegirlPageSummary:
     if not isinstance(page, dict):
         raise MoegirlApiError("页面数据格式错误")
 
+    # MediaWiki 对不存在/已删除的页面返回 {"-1": {"missing": ""}}，
+    # 若不加防御会把空摘要当成查询成功返回给模型
+    if page.get("missing") is not None:
+        raise MoegirlApiError("页面不存在或已被删除")
+    title = str(page.get("title", "")).strip()
+    if not title:
+        raise MoegirlApiError("页面数据缺少标题")
+
     categories_raw = page.get("categories", [])
     categories: list[str] = []
     if isinstance(categories_raw, list):
